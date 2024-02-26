@@ -1,0 +1,202 @@
+﻿@page "/EditarTicket"
+@page "/EditarTicket/TicketId={ticketId:int}"
+
+@inject HttpClient httpClient
+@inject NavigationManager NavigationManager;
+
+<PageTitle>Editar Ticket</PageTitle>
+<EditForm Model="ticket" OnValidSubmit="Modificar" FormName="modificarTicket">
+    <DataAnnotationsValidator />
+    <div class="container">
+        <div class="card shadow-lg">
+            <div class="card-header">
+                <h3><strong>Crear Nuevo Ticket</strong></h3>
+            </div>
+            <div class="card-body">
+                <label>Ticket Id:</label>
+                <div class="col-6">
+                    <InputNumber @bind-Value="ticket.TicketId" class="id-input"></InputNumber>
+                </div>
+                <div class="row">
+                    <div class="col-2">
+                        <label>Fecha:</label>
+                        <InputDate @bind-Value="ticket.Fecha" class="form-control input-group-sm"></InputDate>
+                        <ValidationMessage For="@(() => ticket.Fecha)" />
+                    </div>
+                    <div class="col-3">
+                        <label>Solicitado Por:</label>
+                        <InputSelect class="form-select" @bind-Value="ticket.SolicitadoPor" @onchange="(e) => ActualizarClienteId(e.Value.ToString())">
+                            <option disabled selected>Seleccione una opción</option>
+                            @foreach (var cliente in listaClientes)
+                            {
+                                <option value="@cliente.Nombres">@cliente.Nombres</option>
+                            }
+                        </InputSelect>
+                        <ValidationMessage For="@(() => ticket.SolicitadoPor)" />
+                    </div>
+                    <div class="row">
+                        <div class="col-4">
+                            <label>Asunto:</label>
+                            <InputText @bind-Value="ticket.Asunto" class="form-control input-group-sm" placeholder="Ingrese un título para el ticket."></InputText>
+                            <ValidationMessage For="@(() => ticket.Asunto)" />
+                        </div>
+                        <div class="col-6">
+                            <label>Descripci&oacute;n:</label>
+                            <InputTextArea @bind-Value="ticket.Descripcion" class="form-control input-group-sm" placeholder="Explique aquí el problema."></InputTextArea>
+                            <ValidationMessage For="@(() => ticket.Descripcion)" />
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer d-flex justify-content-center">
+                    <button type="submit" class="btn btn-outline-success"><i class="bi bi-floppy-fill" /> Crear</button>
+                    <div class="col d-flex justify-content-end"><a href="/Tickets" class="btn btn-dark"> Volver</a></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="container">
+        <div class="card shadow-lg">
+            <div class="card-header">
+                <h3><strong>Detalles Ticket</strong></h3>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-3">
+                        <label>Emisor</label>
+                        <InputText @bind-Value="Detalle.Emisor" class="form-control" placeholder="Ej: Juan Perez"></InputText>
+                        <ValidationMessage For="@(() => Detalle.Emisor)" />
+                    </div>
+                    <div class="col-5">
+                        <label>Mensaje</label>
+                        <InputTextArea @bind-Value="Detalle.Mensaje" class="form-control" placeholder="Digite un mensaje."></InputTextArea>
+                        <ValidationMessage For="@(() => Detalle.Mensaje)" />
+                    </div>
+                    <div class="col-3">
+                        <button type="button" @onclick="Agregar" class="btn btn-success">Agregar</button>
+                    </div>
+                </div>
+            </div>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Emisor</th>
+                        <th>Mensaje</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var detalle in listaDetalles)
+                    {
+                        <tr>
+                            <td>@detalle.Emisor</td>
+                            <td>@detalle.Mensaje</td>
+                            <td><button type="button" class="btn btn-info" @onclick=@(() => Editar(detalle))>Editar</button></td>
+                            <td><button type="button" class="btn btn-danger" @onclick=@(() => Eliminar(detalle))>Eliminar</button></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        @Mensaje
+    </div>
+</EditForm>
+
+@code {
+    [Parameter]
+    public int ticketId { get; set; }
+    public Tickets ticket { get; set; } = new Tickets();
+    public string Mensaje { get; set; } = string.Empty;
+    public List<Clientes> listaClientes = new List<Clientes>();
+    public DetalleTickets Detalle { get; set; } = new DetalleTickets();
+    public List<DetalleTickets> listaDetalles = new List<DetalleTickets>();
+    public List<DetalleTickets> detallesEliminados = new List<DetalleTickets>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        ticket.TicketId = ticketId;
+        listaClientes = await httpClient.GetFromJsonAsync<List<Clientes>>("api/Clientes");
+        listaDetalles = (await httpClient
+                        .GetFromJsonAsync<List<DetalleTickets>>("api/DetalleTickets"))
+                        .Where(t => t.TicketId == ticket.TicketId)
+                        .ToList();
+        await Buscar();
+    }
+
+    public async Task Buscar()
+    {
+        var ticketBuscado = await httpClient.GetFromJsonAsync<Tickets>($"api/Tickets/{ticket.TicketId}");
+        if (ticketBuscado != null)
+        {
+            ticket = ticketBuscado;
+        }
+    }
+
+    public async Task Modificar()
+    {
+        var modificado = await httpClient.PutAsJsonAsync($"api/Tickets/{ticket.TicketId}", ticket);
+        if (modificado.IsSuccessStatusCode)
+        {
+            if (detallesEliminados.Any())
+            {
+                foreach (var detalle in detallesEliminados)
+                {
+                    await httpClient.DeleteAsync($"api/DetalleTickets/{detalle.DetalleId}");
+                }
+            }
+            foreach (var detalle in listaDetalles)
+            {
+                if (detalle.DetalleId == 0)
+                {
+                    DetalleTickets nuevoDetalle = new DetalleTickets();
+                    nuevoDetalle.TicketId = ticketId;
+                    nuevoDetalle.Emisor = detalle.Emisor;
+                    nuevoDetalle.Mensaje = detalle.Mensaje;
+
+                    await httpClient.PostAsJsonAsync("api/DetalleTickets", nuevoDetalle);
+                }
+            }
+            VolverAtras();
+        }
+        else
+            Mensaje = "No se pudo modificar el ticket.";
+    }
+
+    void VolverAtras()
+    {
+        NavigationManager.NavigateTo("/Tickets");
+    }
+
+    public async Task ActualizarClienteId(string nombre)
+    {
+        if (nombre != null)
+        {
+            var clienteEncontrado = await httpClient.GetFromJsonAsync<Clientes>($"api/Clientes?nombres={nombre}");
+            if (clienteEncontrado != null)
+                ticket.ClienteId = clienteEncontrado.ClienteId;
+        }
+    }
+
+    public void Agregar()
+    {
+        if (!string.IsNullOrEmpty(Detalle.Emisor) && !string.IsNullOrEmpty(Detalle.Mensaje))
+        {
+            listaDetalles.Add(Detalle);
+            Detalle = new DetalleTickets();
+            Mensaje = string.Empty;
+        }
+        else
+            Mensaje = "No pueden haber campos sin rellenar.";
+    }
+
+    public void Eliminar(DetalleTickets detalle)
+    {
+        Detalle = detalle;
+        listaDetalles.Remove(detalle);
+        detallesEliminados.Add(detalle);
+        Detalle = new DetalleTickets();
+    }
+
+    public void Editar(DetalleTickets detalle)
+    {
+        Detalle = detalle;
+    }
+}
