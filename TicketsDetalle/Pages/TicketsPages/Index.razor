@@ -1,0 +1,79 @@
+﻿@page "/Tickets"
+@inject HttpClient httpClient
+@inject NavigationManager NavigationManager
+
+<PageTitle>Tickets</PageTitle>
+<div class="container">
+	<div class="card shadow-lg">
+		<div class="card-header">
+			<h3><strong>Tickets</strong></h3>
+			<div class="row">
+				<div class="col-2">
+					<a href="/CrearTicket" class="btn btn-success bi bi-file-earmark-diff-fill"> Crear</a>
+				</div>
+			</div>
+		</div>
+		<div class="card-body">
+			<table class="table table-bordered">
+				<thead>
+					<tr>
+						<th>Ticket Id</th>
+						<th>Fecha</th>
+						<th>Solicitado Por</th>
+						<th>Asunto</th>
+						<th>Descripción</th>
+					</tr>
+				</thead>
+				<tbody>
+					@foreach (var ticket in listaTickets)
+					{
+						<tr>
+							<td>@ticket.TicketId</td>
+							<td>@ticket.Fecha.ToShortDateString()</td>
+							<td>@ticket.SolicitadoPor</td>
+							<td>@ticket.Asunto</td>
+							<td>@ticket.Descripcion</td>
+							<td><button type="button" class="btn btn-info" @onclick="(e) => IrDetalle(ticket.TicketId)"><i class="bi bi-eye"></i> Detalles</button></td>
+							<td><button type="button" class="btn btn-warning" @onclick="(e) => IrEditar(ticket.TicketId)"><i class="bi bi-pencil-square"></i> Editar</button></td>
+							<td><button type="button" class="btn btn-danger" @onclick="(e) => IrEliminar(ticket.TicketId)"><i class="bi bi-trash3-fill"></i> Eliminar</button></td>
+						</tr>
+					}
+				</tbody>
+			</table>
+		</div>
+		<div class="card-footer">
+			<div class="row">
+				<div class="col">
+					<p class="float-start"><strong>Total de Tickets:</strong> @listaTickets.Count</p>
+				</div>
+				<div class="col">
+					<p class="float-end"><strong>Clientes con Tickets:</strong> @listaTickets.Select(t => t.ClienteId).Distinct().Count()</p>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+@code {
+	public List<Tickets> listaTickets = new List<Tickets>();
+
+	protected override async Task OnInitializedAsync()
+	{
+		listaTickets = await httpClient.GetFromJsonAsync<List<Tickets>>("api/Tickets");
+	}
+
+	public void IrEditar(int ticketId)
+	{
+		NavigationManager.NavigateTo($"/EditarTicket/TicketId={ticketId}");
+	}
+
+	public void IrEliminar(int ticketId)
+	{
+		NavigationManager.NavigateTo($"/EliminarTicket/TicketId={ticketId}");
+	}
+
+	public void IrDetalle(int ticketId)
+	{
+		NavigationManager.NavigateTo($"DetallesTickets/TicketId={ticketId}");
+	}
+}
