@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TicketsDetalle", "TicketsDe
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TicketsDetalle.api", "..\TicketsDetalle.api\TicketsDetalle.api.csproj", "{84CFA74A-628B-4AD9-9D8B-6BC0CC16AE0E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Library", "..\Library\Library.csproj", "{F66B5520-09F7-4033-A909-64DD8156CEB3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{84CFA74A-628B-4AD9-9D8B-6BC0CC16AE0E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{84CFA74A-628B-4AD9-9D8B-6BC0CC16AE0E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{84CFA74A-628B-4AD9-9D8B-6BC0CC16AE0E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F66B5520-09F7-4033-A909-64DD8156CEB3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F66B5520-09F7-4033-A909-64DD8156CEB3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F66B5520-09F7-4033-A909-64DD8156CEB3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F66B5520-09F7-4033-A909-64DD8156CEB3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
